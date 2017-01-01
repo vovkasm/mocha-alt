@@ -9,20 +9,18 @@ const program = require('commander')
 const path = require('path')
 const fs = require('fs')
 
+const join = path.join
 const resolve = path.resolve
 const exists = fs.existsSync || path.existsSync
 
 const Mocha = require('mocha')
-
+const getOptions = require('mocha/bin/options')
 const utils = Mocha.utils
 const interfaceNames = Object.keys(Mocha.interfaces)
-const join = path.join
 
 const cwd = process.cwd()
 
-const getOptions = require('mocha/bin/options')
-
-var mocha = new Mocha()
+const mocha = new Mocha()
 
 /**
  * Save timer references to avoid Sinon interfering (see GH-237).
@@ -106,25 +104,7 @@ program
   .option('--watch-extensions <ext>,...', 'additional extensions to monitor with --watch', list, [])
   .option('--delay', 'wait for async suite definition')
 
-program._name = 'mocha'
-
-// init command
-
-program
-  .command('init <path>')
-  .description('initialize a client-side mocha setup at <path>')
-  .action(function (path) {
-    var mkdir = require('mkdirp')
-    mkdir.sync(path)
-    var css = fs.readFileSync(join(__dirname, '..', 'mocha.css'))
-    var js = fs.readFileSync(join(__dirname, '..', 'mocha.js'))
-    var tmpl = fs.readFileSync(join(__dirname, '..', 'lib/template.html'))
-    fs.writeFileSync(join(path, 'mocha.css'), css)
-    fs.writeFileSync(join(path, 'mocha.js'), js)
-    fs.writeFileSync(join(path, 'tests.js'), '')
-    fs.writeFileSync(join(path, 'index.html'), tmpl)
-    process.exit(0)
-  })
+program._name = 'mocha-alt'
 
 // --globals
 
@@ -212,7 +192,7 @@ mocha.reporter(program.reporter, reporterOptions)
 // load reporter
 
 try {
-  require('../lib/reporters/' + program.reporter)
+  require('mocha/lib/reporters/' + program.reporter)
 } catch (err) {
   try {
     require(program.reporter)
