@@ -34,6 +34,8 @@ const unmocked = {
   clearInterval: global.clearInterval
 }
 
+const version = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version
+
 /**
  * Files.
  */
@@ -55,7 +57,7 @@ var requires = []
 // options
 
 program
-  .version(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version)
+  .version(version)
   .usage('[debug] [options] [files]')
   .option('-A, --async-only', 'force all tests to take a callback (async) or return a promise')
   .option('-c, --colors', 'force enabling of colors')
