@@ -7,7 +7,7 @@
     "_mocha-alt": "bin/_mocha-alt"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node bin/mocha-alt"
   },
   "keywords": [
     "mocha",

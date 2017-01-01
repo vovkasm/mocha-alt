@@ -317,12 +317,6 @@ program.compilers.forEach(function (c) {
   program.watchExtensions.push(ext)
 })
 
-// requires
-
-requires.forEach(function (mod) {
-  require(mod)
-})
-
 // interface
 
 mocha.ui(program.ui)
@@ -368,6 +362,28 @@ if (program.sort) {
   files.sort()
 }
 
+// requires
+
+const setupQueue = []
+requires.forEach(function (mod) {
+  setupQueue.push(require(mod))
+})
+function nextSetup () {
+  if (setupQueue.length === 0) {
+    process.nextTick(start)
+    return
+  }
+  const fn = setupQueue.shift()
+  if (typeof fn === 'function') {
+    fn(function () {
+      process.nextTick(nextSetup)
+    })
+  } else {
+    process.nextTick(nextSetup)
+  }
+}
+nextSetup()
+
 // --watch
 
 var runner
@@ -375,66 +391,68 @@ var loadAndRun
 var purge
 var rerun
 
-if (program.watch) {
-  console.log()
-  hideCursor()
-  process.on('SIGINT', function () {
-    showCursor()
-    console.log('\n')
-    process.exit(130)
-  })
-
-  var watchFiles = utils.files(cwd, [ 'js' ].concat(program.watchExtensions))
-  var runAgain = false
-
-  loadAndRun = function loadAndRun () {
-    try {
-      mocha.files = files
-      runAgain = false
-      runner = mocha.run(function () {
-        runner = null
-        if (runAgain) {
-          rerun()
-        }
-      })
-    } catch (e) {
-      console.log(e.stack)
-    }
-  }
-
-  purge = function purge () {
-    watchFiles.forEach(function (file) {
-      delete require.cache[file]
+function start () {
+  if (program.watch) {
+    console.log()
+    hideCursor()
+    process.on('SIGINT', function () {
+      showCursor()
+      console.log('\n')
+      process.exit(130)
     })
-  }
 
-  loadAndRun()
+    var watchFiles = utils.files(cwd, [ 'js' ].concat(program.watchExtensions))
+    var runAgain = false
 
-  rerun = function rerun () {
-    purge()
-    stop()
-    if (!program.grep) {
-      mocha.grep(null)
+    loadAndRun = function loadAndRun () {
+      try {
+        mocha.files = files
+        runAgain = false
+        runner = mocha.run(function () {
+          runner = null
+          if (runAgain) {
+            rerun()
+          }
+        })
+      } catch (e) {
+        console.log(e.stack)
+      }
     }
-    mocha.suite = mocha.suite.clone()
-    mocha.suite.ctx = new Mocha.Context()
-    mocha.ui(program.ui)
+
+    purge = function purge () {
+      watchFiles.forEach(function (file) {
+        delete require.cache[file]
+      })
+    }
+
     loadAndRun()
-  }
 
-  utils.watch(watchFiles, function () {
-    runAgain = true
-    if (runner) {
-      runner.abort()
-    } else {
-      rerun()
+    rerun = function rerun () {
+      purge()
+      stop()
+      if (!program.grep) {
+        mocha.grep(null)
+      }
+      mocha.suite = mocha.suite.clone()
+      mocha.suite.ctx = new Mocha.Context()
+      mocha.ui(program.ui)
+      loadAndRun()
     }
-  })
-} else {
-// load
 
-  mocha.files = files
-  runner = mocha.run(program.exit ? exit : exitLater)
+    utils.watch(watchFiles, function () {
+      runAgain = true
+      if (runner) {
+        runner.abort()
+      } else {
+        rerun()
+      }
+    })
+  } else {
+  // load
+
+    mocha.files = files
+    runner = mocha.run(program.exit ? exit : exitLater)
+  }
 }
 
 function exitLater (code) {
