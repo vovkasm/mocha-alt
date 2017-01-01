@@ -1,0 +1,27 @@
+{
+  "name": "mocha-alt",
+  "version": "0.0.1",
+  "description": "Better mocha CLI",
+  "bin": {
+    "mocha-alt": "bin/mocha-alt",
+    "_mocha-alt": "bin/_mocha-alt"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mocha",
+    "test"
+  ],
+  "author": "Vladimir Timofeev <vovkasm@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "mocha": "^3.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.12.2",
+    "eslint-config-standard": "^6.2.1",
+    "eslint-plugin-promise": "^3.4.0",
+    "eslint-plugin-standard": "^2.0.1"
+  }
+}
