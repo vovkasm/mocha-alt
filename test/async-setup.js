@@ -9,7 +9,7 @@ describe('Async requires', function () {
     const runner = path.resolve(__dirname, '../bin/mocha-alt')
     const setup = path.resolve(__dirname, 'fixtures/async-setup.js')
     const test = path.resolve(__dirname, 'fixtures/async-setup.spec.js')
-    const args = [runner, '--reporter', 'json', '--require', setup, test]
+    const args = [runner, '--reporter', 'json', '--require-async', setup, test]
     const child = childProcess.spawnSync(process.execPath, args, {encoding: 'utf8'})
     assert.equal(child.status, 0, 'async-setup.spec.js failed, output was: ' + child.stdout)
   })

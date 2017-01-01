@@ -52,7 +52,7 @@ var globals = []
  * Requires.
  */
 
-var requires = []
+const requires = []
 
 // options
 
@@ -73,6 +73,7 @@ program
   .option('-gc, --expose-gc', 'expose gc extension')
   .option('-i, --invert', 'inverts --grep and --fgrep matches')
   .option('-r, --require <name>', 'require the given module')
+  .option('--require-async <name>', 'require the given module and wait for imported function')
   .option('-s, --slow <ms>', '"slow" test threshold in milliseconds [75]')
   .option('-t, --timeout <ms>', 'set test-case timeout in milliseconds [2000]')
   .option('-u, --ui <name>', 'specify user-interface (' + interfaceNames.join('|') + ')', 'bdd')
@@ -155,7 +156,15 @@ program.on('require', function (mod) {
   if (abs) {
     mod = resolve(mod)
   }
-  requires.push(mod)
+  requires.push({file: mod})
+})
+
+program.on('require-async', function (mod) {
+  var abs = exists(mod) || exists(mod + '.js')
+  if (abs) {
+    mod = resolve(mod)
+  }
+  requires.push({file: mod, async: true})
 })
 
 // If not already done, load mocha.opts
@@ -366,7 +375,14 @@ if (program.sort) {
 
 const setupQueue = []
 requires.forEach(function (mod) {
-  setupQueue.push(require(mod))
+  const fn = require(mod.file)
+  if (mod.async === true) {
+    if (typeof fn !== 'function') {
+      console.error('Module ' + mod.file + ' should export async function to setup')
+      process.exit(1)
+    }
+    setupQueue.push(fn)
+  }
 })
 function nextSetup () {
   if (setupQueue.length === 0) {
@@ -374,13 +390,9 @@ function nextSetup () {
     return
   }
   const fn = setupQueue.shift()
-  if (typeof fn === 'function') {
-    fn(function () {
-      process.nextTick(nextSetup)
-    })
-  } else {
+  fn(function () {
     process.nextTick(nextSetup)
-  }
+  })
 }
 nextSetup()
 
